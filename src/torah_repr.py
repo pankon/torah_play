@@ -20,25 +20,13 @@ class TorahRepr:
         length = len(self.letters)
         out = []
         n_added = 0
-        
+
+        # do not allow starting from an already visited letter
         if start in self.used:
             return ''.join(out), first_idx, n_added, idx
-        """
-        while idx < length:
-            if idx not in self.used:
-                break
-            idx += 1
-        """
 
         while idx < length and len(out) < max_read:
-            if do_spacing and out and n_added and n_added % grouping == grouping - 1:
-                if out[-1] in Letter.reverse_alt_letter_lookup:
-                    out[-1] = Letter.reverse_alt_letter_lookup[out[-1]]
-
-                if n_added % (grouping * column_size) == (grouping * column_size) - 1:
-                    out.append("\n")
-                else:
-                    out.append(" ")
+            self.pretty_format(column_size, do_spacing, grouping, n_added, out)
 
             current = self.letters[idx]
             #if idx not in self.used:
@@ -55,21 +43,15 @@ class TorahRepr:
             idx += current.value
         return ''.join(out), first_idx, n_added, idx
 
-"""
-        out.append(combo)
-        for i in range(18):
-            combo, new_idx = torah_repr.read(new_idx, 3, 50, max)
-            out.append(combo)
-    
-        idx = 0
-        mixed_out = []
-        split_segments = [segment.split(" ") for segment in out]
-        for idx in range(max):
-            for group in split_segments:
-                if idx >= len(group):
-                    break
-                mixed_out.append(group[idx])
-        """
+    def pretty_format(self, column_size, do_spacing, grouping, n_added, out):
+        if do_spacing and out and n_added and n_added % grouping == grouping - 1:
+            if out[-1] in Letter.reverse_alt_letter_lookup:
+                out[-1] = Letter.reverse_alt_letter_lookup[out[-1]]
+
+            if n_added % (grouping * column_size) == (grouping * column_size) - 1:
+                out.append("\n")
+            else:
+                out.append(" ")
 
 
 if __name__ == "__main__":
@@ -82,6 +64,11 @@ if __name__ == "__main__":
     checksums = ["מכרשובאתנלחההאש"]
     last = None
     min = 300000
+
+    show_diff = False
+    show_equal_section = False
+    create_output_files = False
+
     for start_idx in range(0, len(torah_repr.letters)):
         combo, new_idx, n_added, idx = torah_repr.read(start_idx, 3, 50, max, do_spacing=False)
         if not n_added:
@@ -98,14 +85,18 @@ if __name__ == "__main__":
                 equals_idx += 1
                 if equals_idx > len(combo) or equals_idx > len(last):
                     break
-            #print("equals:", ''.join(buffer))
 
-            #print("diff 1:", last[:-equals_idx])
-            #print("diff 2:", combo[:-equals_idx])
+            if show_diff:
+                print("diff:", last[:-equals_idx])
+
+            if show_equal_section:
+                print("equal section:", ''.join(buffer))
+
             last = combo
 
-        # with open("data/out_{}.txt".format(start_idx), "w", encoding="utf-8") as fp:
-        #    fp.write(combo) #" ".join(mixed_out))
+        if create_output_files:
+            with open("data/out_{}.txt".format(start_idx), "w", encoding="utf-8") as fp:
+                fp.write(combo)
 
         last_value = Letter.convert_hebrew_letter(combo[-1])
         test = ''.join(letter.letter for letter in torah_repr.letters[idx - last_value - 1:])
@@ -122,20 +113,7 @@ if __name__ == "__main__":
             required_identical -= 1
             if required_identical <= 0:
                 required_identical = 1
+
+            # 289,426 letter
             break
 
-        #if True:
-        #    break
-
-
-    """
-    out_new = []
-    for i in range(3):
-        for checksum in checksums:
-            if len(checksum) > i:
-                out_new.append(checksum[i])
-            else:
-                out_new.append(" ")
-
-    print(''.join(out_new))
-    """
